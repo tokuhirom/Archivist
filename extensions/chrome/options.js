@@ -18,13 +18,10 @@ async function migrateStorage() {
 }
 
 function updateFilterModeUI(mode) {
-  const label = document.getElementById("domainListLabel");
   const hint = document.getElementById("domainListHint");
   if (mode === "allowlist") {
-    label.textContent = "Allowlist (one host per line)";
     hint.textContent = "Only pages whose hostname matches a line below will be captured.";
   } else {
-    label.textContent = "Denylist (one host per line)";
     hint.textContent = "If the page hostname matches any line, Archivist Capture will skip sending.";
   }
 }
