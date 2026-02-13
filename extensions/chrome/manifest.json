@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Archivist Capture",
+  "version": "0.1.0",
+  "description": "Capture page text and send it to Archivist (local-first).",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_title": "Archivist Capture"
+  }
+}

@@ -1,0 +1,28 @@
+[package]
+name = "archivist"
+version = "0.1.0"
+description = "Archivist - local-first personal web archive"
+authors = ["you"]
+license = "MIT"
+repository = ""
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+tauri = { version = "1.5", features = ["shell-open"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+axum = "0.7"
+hyper = "1"
+tower = "0.4"
+rusqlite = { version = "0.31", features = ["bundled"] }
+sha2 = "0.10"
+hex = "0.4"
+url = "2"
+getrandom = "0.2"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
