@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS schema_meta (
   value TEXT NOT NULL
 );
 
-INSERT OR IGNORE INTO schema_meta(key, value) VALUES ('schema_version', '1');
+INSERT OR IGNORE INTO schema_meta(key, value) VALUES ('schema_version', '2');
 
 CREATE TABLE IF NOT EXISTS pages (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +40,7 @@ USING fts5(
   text,
   content='pages',
   content_rowid='id',
-  tokenize='unicode61'
+  tokenize='trigram'
 );
 
 CREATE TRIGGER IF NOT EXISTS pages_ai AFTER INSERT ON pages BEGIN

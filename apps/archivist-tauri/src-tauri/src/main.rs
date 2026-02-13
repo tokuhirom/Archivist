@@ -151,6 +151,18 @@ async fn get_token(state: tauri::State<'_, AppState>) -> Result<String, String> 
   Ok(state.token.as_ref().clone())
 }
 
+fn build_fts_query(raw: &str) -> String {
+  let terms: Vec<&str> = raw.split_whitespace().filter(|t| !t.is_empty()).collect();
+  if terms.len() <= 1 {
+    return format!("\"{}\"", raw.replace('"', "\"\""));
+  }
+  terms
+    .iter()
+    .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
+    .collect::<Vec<_>>()
+    .join(" AND ")
+}
+
 #[tauri::command]
 async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_filter: Option<String>) -> Result<Vec<SearchRow>, String> {
   let q = query.trim();
@@ -216,11 +228,13 @@ async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_fil
     })
   };
 
+  let fts_query = build_fts_query(q);
+
   let rows = if host_filter.as_ref().map(|s| !s.trim().is_empty()).unwrap_or(false) {
-    stmt.query_map(rusqlite::params![q, host_filter.unwrap()], map_row)
+    stmt.query_map(rusqlite::params![fts_query, host_filter.unwrap()], map_row)
       .map_err(|e| e.to_string())?
   } else {
-    stmt.query_map(rusqlite::params![q], map_row)
+    stmt.query_map(rusqlite::params![fts_query], map_row)
       .map_err(|e| e.to_string())?
   };
 
@@ -319,7 +333,54 @@ fn open_db(dir: &PathBuf) -> rusqlite::Connection {
   let conn = rusqlite::Connection::open(p).expect("open sqlite");
   conn.execute_batch("PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL;").ok();
   conn.execute_batch(include_str!("../sql/schema.sql")).expect("initialize schema");
+  migrate_fts_to_trigram(&conn);
   conn
+}
+
+fn migrate_fts_to_trigram(conn: &rusqlite::Connection) {
+  let version: String = conn
+    .query_row(
+      "SELECT value FROM schema_meta WHERE key = 'schema_version'",
+      [],
+      |r| r.get(0),
+    )
+    .unwrap_or_else(|_| "1".to_string());
+
+  if version.as_str() >= "2" {
+    return;
+  }
+
+  conn.execute_batch(
+    r#"
+    DROP TRIGGER IF EXISTS pages_ai;
+    DROP TRIGGER IF EXISTS pages_ad;
+    DROP TRIGGER IF EXISTS pages_au;
+    DROP TABLE IF EXISTS pages_fts;
+
+    CREATE VIRTUAL TABLE pages_fts USING fts5(
+      title, text,
+      content='pages', content_rowid='id',
+      tokenize='trigram'
+    );
+
+    INSERT INTO pages_fts(rowid, title, text)
+      SELECT id, title, text FROM pages WHERE is_deleted = 0;
+
+    CREATE TRIGGER pages_ai AFTER INSERT ON pages BEGIN
+      INSERT INTO pages_fts(rowid, title, text) VALUES (new.id, new.title, new.text);
+    END;
+    CREATE TRIGGER pages_ad AFTER DELETE ON pages BEGIN
+      INSERT INTO pages_fts(pages_fts, rowid, title, text) VALUES ('delete', old.id, old.title, old.text);
+    END;
+    CREATE TRIGGER pages_au AFTER UPDATE ON pages BEGIN
+      INSERT INTO pages_fts(pages_fts, rowid, title, text) VALUES ('delete', old.id, old.title, old.text);
+      INSERT INTO pages_fts(rowid, title, text) VALUES (new.id, new.title, new.text);
+    END;
+
+    UPDATE schema_meta SET value = '2' WHERE key = 'schema_version';
+    "#,
+  )
+  .expect("migrate FTS to trigram");
 }
 
 fn main() {
