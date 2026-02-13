@@ -11,6 +11,11 @@ export function mountRoot() {
     <div class="search-bar" id="searchBar">
       <input id="q" placeholder="Search (FTS5)" />
       <input id="hostFilter" class="small" placeholder="host filter (optional)" />
+      <select id="sortOrder" class="small" style="width:auto;">
+        <option value="relevance">Relevance</option>
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+      </select>
       <button id="searchBtn">Search</button>
     </div>
 

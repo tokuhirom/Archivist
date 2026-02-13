@@ -55,7 +55,8 @@ async function runSearch() {
   const hostFilter = (el("hostFilter") as HTMLInputElement).value.trim();
   currentQuery = q;
 
-  results = await invoke<SearchRow[]>("search_pages", { query: q, hostFilter: hostFilter || null });
+  const sort = (el("sortOrder") as HTMLSelectElement).value;
+  results = await invoke<SearchRow[]>("search_pages", { query: q, hostFilter: hostFilter || null, sort });
   renderResults();
   if (results.length > 0) {
     await select(results[0].id);
@@ -276,6 +277,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   (el("hostFilter") as HTMLInputElement).addEventListener("keydown", handleSearchKeydown);
   (el("q") as HTMLInputElement).addEventListener("input", debounceSearch);
   (el("hostFilter") as HTMLInputElement).addEventListener("input", debounceSearch);
+  (el("sortOrder") as HTMLSelectElement).addEventListener("change", () => runSearch());
   el("refreshStats").addEventListener("click", () => { loadGlobalStats(); loadDomainStats(); });
   el("searchBtn").addEventListener("click", () => runSearch());
   (el("autostart") as HTMLInputElement).addEventListener("change", async (e) => {

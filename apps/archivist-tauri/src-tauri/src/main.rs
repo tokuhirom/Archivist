@@ -168,22 +168,24 @@ fn build_fts_query(raw: &str) -> String {
 }
 
 #[tauri::command]
-async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_filter: Option<String>) -> Result<Vec<SearchRow>, String> {
+async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_filter: Option<String>, sort: Option<String>) -> Result<Vec<SearchRow>, String> {
   let q = query.trim();
+  let sort = sort.unwrap_or_else(|| "relevance".into());
   let conn = state.db.lock().await;
 
   let mut out = Vec::new();
 
+  let order_clause = match sort.as_str() {
+    "oldest" => "ORDER BY captured_at_ms ASC",
+    _ => "ORDER BY captured_at_ms DESC",  // "newest" and default
+  };
+
   if q.is_empty() {
-    let mut stmt = conn.prepare(
-      r#"
-      SELECT id, title, normalized_url, host, captured_at_ms, excerpt
-      FROM pages
-      WHERE is_deleted = 0
-      ORDER BY captured_at_ms DESC
-      LIMIT 80
-      "#,
-    ).map_err(|e| e.to_string())?;
+    let sql = format!(
+      "SELECT id, title, normalized_url, host, captured_at_ms, excerpt FROM pages WHERE is_deleted = 0 {} LIMIT 80",
+      order_clause
+    );
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
 
     let rows = stmt.query_map([], |r| {
       Ok(SearchRow{
@@ -203,6 +205,12 @@ async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_fil
     return Ok(out);
   }
 
+  let fts_order = match sort.as_str() {
+    "relevance" => "ORDER BY f.rank",
+    "oldest" => "ORDER BY p.captured_at_ms ASC",
+    _ => "ORDER BY p.captured_at_ms DESC",
+  };
+
   let mut sql = r#"
     SELECT p.id, p.title, p.normalized_url, p.host, p.captured_at_ms, p.excerpt,
            snippet(pages_fts, 1, '[[mark]]', '[[/mark]]', '…', 30)
@@ -216,7 +224,7 @@ async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_fil
     sql.push_str(" AND p.host = ?2 ");
   }
 
-  sql.push_str(" ORDER BY p.captured_at_ms DESC LIMIT 80 ");
+  sql.push_str(&format!(" {} LIMIT 80 ", fts_order));
 
   let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
 
