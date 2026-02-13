@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{net::SocketAddr, path::PathBuf, sync::Arc};
 use tauri::Manager;
+use tauri_plugin_opener::OpenerExt;
 use tokio::sync::Mutex;
 
 #[derive(Clone)]
@@ -41,13 +42,11 @@ fn sha256_hex(s: &str) -> String {
 }
 
 fn excerpt(text: &str) -> String {
-  // Keep a short excerpt for list preview.
-  // This is not a "snippet around match"; it's a quick default.
   let trimmed = text.trim();
   let max = 2400usize;
   let mut s = trimmed.chars().take(max).collect::<String>();
   if trimmed.chars().count() > max {
-    s.push('…');
+    s.push('\u{2026}');
   }
   s
 }
@@ -64,7 +63,6 @@ async fn capture(State(state): State<AppState>, headers: HeaderMap, Json(p): Jso
     return (StatusCode::UNAUTHORIZED, "unauthorized".into());
   }
 
-  // Basic guards
   if p.normalized_url.is_empty() || p.raw_url.is_empty() {
     return (StatusCode::BAD_REQUEST, "missing url".into());
   }
@@ -82,7 +80,6 @@ async fn capture(State(state): State<AppState>, headers: HeaderMap, Json(p): Jso
 
   let conn = state.db.lock().await;
 
-  // Initialize tables (idempotent)
   conn.execute_batch(include_str!("../sql/schema.sql")).ok();
 
   let r = conn.execute(
@@ -114,7 +111,6 @@ async fn capture(State(state): State<AppState>, headers: HeaderMap, Json(p): Jso
 }
 
 fn check_auth(state: &AppState, headers: &HeaderMap) -> bool {
-  // Expect: Authorization: Bearer <token>
   let Some(v) = headers.get("authorization") else { return false; };
   let Ok(s) = v.to_str() else { return false; };
   let s = s.trim();
@@ -166,7 +162,6 @@ async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_fil
   let mut out = Vec::new();
 
   if q.is_empty() {
-    // Default view: recent pages
     let mut stmt = conn.prepare(
       r#"
       SELECT id, title, normalized_url, host, captured_at_ms, excerpt
@@ -194,7 +189,6 @@ async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_fil
     return Ok(out);
   }
 
-  // FTS query
   let mut sql = r#"
     SELECT p.id, p.title, p.normalized_url, p.host, p.captured_at_ms, p.excerpt
     FROM pages_fts f
@@ -294,14 +288,13 @@ async fn domain_stats(state: tauri::State<'_, AppState>) -> Result<Vec<DomainSta
 
 #[tauri::command]
 async fn open_in_browser(app: tauri::AppHandle, url: String) -> Result<(), String> {
-  tauri::api::shell::open(&app.shell_scope(), url, None)
-    .map_err(|e| e.to_string())
+  app.opener().open_url(&url, None::<&str>).map_err(|e| e.to_string())
 }
 
 fn app_data_dir(app: &tauri::AppHandle) -> PathBuf {
-  app.path_resolver()
+  app.path()
     .app_data_dir()
-    .unwrap_or_else(|| std::env::current_dir().unwrap())
+    .unwrap_or_else(|_| std::env::current_dir().unwrap())
 }
 
 fn load_or_create_token(dir: &PathBuf) -> String {
@@ -311,7 +304,6 @@ fn load_or_create_token(dir: &PathBuf) -> String {
     let t = s.trim().to_string();
     if !t.is_empty() { return t; }
   }
-  // Generate a random token (not a cryptographic key, but good enough for local auth).
   let t = {
     let mut b = [0u8; 32];
     getrandom::getrandom(&mut b).ok();
@@ -329,11 +321,9 @@ fn open_db(dir: &PathBuf) -> rusqlite::Connection {
   conn
 }
 
-#[tokio::main]
-async fn main() {
-  // NOTE: Tauri creates its own runtime; we use tokio::main only for the dev skeleton.
-  // In production you may want to use tauri::async_runtime instead.
+fn main() {
   tauri::Builder::default()
+    .plugin(tauri_plugin_opener::init())
     .setup(|app| {
       let dir = app_data_dir(&app.handle());
       let token = load_or_create_token(&dir);
@@ -344,7 +334,6 @@ async fn main() {
         token: Arc::new(token),
       };
 
-      // Start ingest server in background.
       let state2 = state.clone();
       tauri::async_runtime::spawn(async move {
         let router = Router::new()

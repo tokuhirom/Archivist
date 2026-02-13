@@ -1,32 +1,31 @@
 {
+  "productName": "Archivist",
+  "version": "0.1.0",
+  "identifier": "me.geso.archivist",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist"
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
   },
-  "package": {
-    "productName": "Archivist",
-    "version": "0.1.0"
-  },
-  "tauri": {
+  "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Archivist",
         "width": 1100,
         "height": 760,
         "resizable": true
       }
-    ],
-    "allowlist": {
-      "shell": {
-        "open": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "me.geso.archivist"
-    }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/icon.png",
+      "icons/icon.icns"
+    ]
   }
 }
