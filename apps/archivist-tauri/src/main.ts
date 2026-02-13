@@ -150,6 +150,9 @@ async function loadSettings() {
   const token = await invoke<string>("get_token");
   (el("token") as HTMLInputElement).value = token;
 
+  const ingestUrl = await invoke<string>("get_ingest_url");
+  (el("ingestUrl") as HTMLInputElement).value = ingestUrl;
+
   try {
     const enabled = await invoke<boolean>("get_autostart");
     (el("autostart") as HTMLInputElement).checked = enabled;

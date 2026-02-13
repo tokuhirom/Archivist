@@ -25,6 +25,7 @@ use tokio::sync::Mutex;
 struct AppState {
   db: Arc<Mutex<rusqlite::Connection>>,
   token: Arc<String>,
+  ingest_url: Arc<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -348,6 +349,11 @@ async fn open_in_browser(app: tauri::AppHandle, url: String) -> Result<(), Strin
 }
 
 #[tauri::command]
+async fn get_ingest_url(state: tauri::State<'_, AppState>) -> Result<String, String> {
+  Ok(state.ingest_url.as_ref().clone())
+}
+
+#[tauri::command]
 async fn get_autostart(app: tauri::AppHandle) -> Result<bool, String> {
   app.autolaunch().is_enabled().map_err(|e| e.to_string())
 }
@@ -449,9 +455,20 @@ fn main() {
       let token = load_or_create_token(&dir);
       let conn = open_db(&dir);
 
+      // Bind to preferred port, fall back to OS-assigned port
+      let preferred: SocketAddr = "127.0.0.1:17373".parse().unwrap();
+      let fallback: SocketAddr = "127.0.0.1:0".parse().unwrap();
+      let listener = std::net::TcpListener::bind(preferred)
+        .or_else(|_| std::net::TcpListener::bind(fallback))
+        .expect("failed to bind ingest server");
+      let local_addr = listener.local_addr().expect("failed to get local addr");
+      listener.set_nonblocking(true).ok();
+      let ingest_url = format!("http://{}:{}/capture", local_addr.ip(), local_addr.port());
+
       let state = AppState {
         db: Arc::new(Mutex::new(conn)),
         token: Arc::new(token),
+        ingest_url: Arc::new(ingest_url),
       };
 
       let state2 = state.clone();
@@ -461,8 +478,7 @@ fn main() {
           .route("/capture", post(capture))
           .with_state(state2);
 
-        let addr: SocketAddr = "127.0.0.1:17373".parse().unwrap();
-        let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+        let listener = tokio::net::TcpListener::from_std(listener).expect("convert listener");
         axum::serve(listener, router).await.unwrap();
       });
 
@@ -519,6 +535,7 @@ fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       get_token,
+      get_ingest_url,
       search_pages,
       get_page,
       domain_stats,
