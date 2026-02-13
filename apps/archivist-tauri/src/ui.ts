@@ -24,7 +24,7 @@ export function mountRoot() {
         <div class="left">
           <div id="results"></div>
         </div>
-        <div class="right" id="preview"></div>
+        <div class="right" id="preview" tabindex="0"></div>
       </div>
     </div>
 

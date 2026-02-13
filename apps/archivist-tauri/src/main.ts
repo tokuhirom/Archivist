@@ -275,6 +275,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   (el("q") as HTMLInputElement).addEventListener("keydown", handleSearchKeydown);
   (el("hostFilter") as HTMLInputElement).addEventListener("keydown", handleSearchKeydown);
+  el("preview").addEventListener("keydown", handleSearchKeydown);
   (el("q") as HTMLInputElement).addEventListener("input", debounceSearch);
   (el("hostFilter") as HTMLInputElement).addEventListener("input", debounceSearch);
   (el("sortOrder") as HTMLSelectElement).addEventListener("change", () => runSearch());
