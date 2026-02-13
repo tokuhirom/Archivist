@@ -10,6 +10,27 @@ const DEFAULTS = {
 
 const sentCache = new Map(); // urlHash -> lastSentAtMs
 
+const ICON_OK = {
+  "16": "icons/icon-16.png",
+  "48": "icons/icon-48.png",
+  "128": "icons/icon-128.png"
+};
+const ICON_ERROR = {
+  "16": "icons/icon-error-16.png",
+  "48": "icons/icon-error-48.png",
+  "128": "icons/icon-error-128.png"
+};
+
+function setIconOk() {
+  chrome.action.setIcon({ path: ICON_OK });
+  chrome.action.setTitle({ title: "Archivist Capture" });
+}
+
+function setIconError() {
+  chrome.action.setIcon({ path: ICON_ERROR });
+  chrome.action.setTitle({ title: "Archivist Capture - Connection failed" });
+}
+
 function sha1Hex(input) {
   // Minimal SHA-1 using WebCrypto for dedupe (not for security).
   const enc = new TextEncoder().encode(input);
@@ -110,7 +131,7 @@ async function captureAndSend(tabId) {
   };
 
   try {
-    await fetch(cfg.ingestUrl, {
+    const resp = await fetch(cfg.ingestUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -118,8 +139,13 @@ async function captureAndSend(tabId) {
       },
       body: JSON.stringify(body)
     });
+    if (resp.ok) {
+      setIconOk();
+    } else {
+      setIconError();
+    }
   } catch {
-    // Intentionally ignore errors (app may not be running).
+    setIconError();
   }
 }
 
