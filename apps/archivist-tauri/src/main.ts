@@ -39,10 +39,12 @@ function escapeHtml(s: string): string {
 
 let results: SearchRow[] = [];
 let selectedId: number | null = null;
+let currentQuery = "";
 
 async function runSearch() {
   const q = (el("q") as HTMLInputElement).value.trim();
   const hostFilter = (el("hostFilter") as HTMLInputElement).value.trim();
+  currentQuery = q;
 
   results = await invoke<SearchRow[]>("search_pages", { query: q, hostFilter: hostFilter || null });
   renderResults();
@@ -59,6 +61,18 @@ async function select(id: number) {
   const page = await invoke<Page>("get_page", { id });
   renderResults();
   renderPreview(page);
+}
+
+function highlightText(text: string, query: string): string {
+  const escaped = escapeHtml(text);
+  if (!query) return escaped;
+  const terms = query.split(/\s+/).filter(t => t.length > 0);
+  if (terms.length === 0) return escaped;
+  const pattern = terms
+    .map(t => escapeHtml(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+  const re = new RegExp(`(${pattern})`, "gi");
+  return escaped.replace(re, "<mark>$1</mark>");
 }
 
 function snippetHtml(r: SearchRow): string {
@@ -98,6 +112,7 @@ function renderPreview(page: Page | null) {
     box.innerHTML = `<div class="empty">No selection</div>`;
     return;
   }
+  const textHtml = highlightText(page.text || "", currentQuery);
   box.innerHTML = `
     <div class="p-title">${escapeHtml(page.title || "(no title)")}</div>
     <div class="p-meta">
@@ -105,12 +120,16 @@ function renderPreview(page: Page | null) {
       <span> · ${escapeHtml(fmtTime(page.captured_at_ms))}</span>
       <span> · ${escapeHtml(page.host)}</span>
     </div>
-    <pre class="p-text">${escapeHtml(page.text || "")}</pre>
+    <pre class="p-text">${textHtml}</pre>
   `;
   el("openUrl").addEventListener("click", async (e) => {
     e.preventDefault();
     await invoke("open_in_browser", { url: page.normalized_url });
   });
+  const firstMark = box.querySelector(".p-text mark");
+  if (firstMark) {
+    firstMark.scrollIntoView({ block: "center" });
+  }
 }
 
 async function loadSettings() {

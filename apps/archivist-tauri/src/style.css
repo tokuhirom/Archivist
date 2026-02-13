@@ -16,7 +16,7 @@ body { margin: 0; }
 .title { font-weight: 600; margin-bottom: 4px; }
 .meta { color: #666; font-size: 12px; margin-bottom: 6px; }
 .excerpt { color: #333; font-size: 12px; line-height: 1.35; max-height: 3.9em; overflow: hidden; }
-.excerpt mark { background: #fff3b0; padding: 0 2px; border-radius: 2px; }
+.excerpt mark, .p-text mark { background: #fff3b0; padding: 0 2px; border-radius: 2px; }
 .p-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
 .p-meta { color: #666; font-size: 12px; margin-bottom: 10px; }
 .p-text { white-space: pre-wrap; line-height: 1.4; font-size: 13px; }
