@@ -300,6 +300,45 @@ async fn domain_stats(state: tauri::State<'_, AppState>) -> Result<Vec<DomainSta
   Ok(out)
 }
 
+#[derive(Debug, Serialize)]
+struct GlobalStats {
+  total_pages: i64,
+  total_chars: i64,
+  total_bytes: i64,
+  domain_count: i64,
+  oldest_ms: Option<i64>,
+  newest_ms: Option<i64>,
+}
+
+#[tauri::command]
+async fn global_stats(state: tauri::State<'_, AppState>) -> Result<GlobalStats, String> {
+  let conn = state.db.lock().await;
+  conn.query_row(
+    r#"
+    SELECT
+      COUNT(*) AS total_pages,
+      COALESCE(SUM(text_len), 0) AS total_chars,
+      COALESCE(SUM(LENGTH(text)), 0) AS total_bytes,
+      COUNT(DISTINCT host) AS domain_count,
+      MIN(captured_at_ms) AS oldest_ms,
+      MAX(captured_at_ms) AS newest_ms
+    FROM pages
+    WHERE is_deleted = 0
+    "#,
+    [],
+    |r| {
+      Ok(GlobalStats {
+        total_pages: r.get(0)?,
+        total_chars: r.get(1)?,
+        total_bytes: r.get(2)?,
+        domain_count: r.get(3)?,
+        oldest_ms: r.get(4)?,
+        newest_ms: r.get(5)?,
+      })
+    },
+  ).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn open_in_browser(app: tauri::AppHandle, url: String) -> Result<(), String> {
   app.opener().open_url(&url, None::<&str>).map_err(|e| e.to_string())
@@ -417,6 +456,7 @@ fn main() {
       search_pages,
       get_page,
       domain_stats,
+      global_stats,
       open_in_browser
     ])
     .run(tauri::generate_context!())

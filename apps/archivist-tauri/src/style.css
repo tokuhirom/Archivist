@@ -20,6 +20,11 @@ body { margin: 0; }
 .p-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
 .p-meta { color: #666; font-size: 12px; margin-bottom: 10px; }
 .p-text { white-space: pre-wrap; line-height: 1.4; font-size: 13px; }
+.global-stats { display: flex; gap: 16px; padding: 12px 0; }
+.gs-item { text-align: center; min-width: 80px; padding: 10px 16px; background: #f5f7fa; border-radius: 6px; }
+.gs-val { font-size: 20px; font-weight: 700; color: #111; }
+.gs-label { font-size: 11px; color: #888; margin-top: 2px; }
+.gs-time { font-size: 12px; color: #666; padding: 4px 0 0 0; }
 .stat { padding: 8px 0; border-bottom: 1px solid #eee; }
 .stat .host { font-weight: 600; }
 .stat .nums { color: #666; font-size: 12px; }

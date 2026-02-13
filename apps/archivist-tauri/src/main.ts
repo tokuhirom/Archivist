@@ -23,6 +23,15 @@ type DomainStat = {
   last_seen_ms: number;
 };
 
+type GlobalStats = {
+  total_pages: number;
+  total_chars: number;
+  total_bytes: number;
+  domain_count: number;
+  oldest_ms: number | null;
+  newest_ms: number | null;
+};
+
 const el = (id: string) => document.getElementById(id)!;
 
 function fmtTime(ms: number): string {
@@ -137,6 +146,35 @@ async function loadSettings() {
   (el("token") as HTMLInputElement).value = token;
 }
 
+function fmtBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+async function loadGlobalStats() {
+  try {
+    const s = await invoke<GlobalStats>("global_stats");
+    const box = el("globalStats");
+    const timeRange = s.oldest_ms && s.newest_ms
+      ? `${fmtTime(s.oldest_ms)} — ${fmtTime(s.newest_ms)}`
+      : "—";
+    box.innerHTML = `
+      <div class="global-stats">
+        <div class="gs-item"><div class="gs-val">${s.total_pages.toLocaleString()}</div><div class="gs-label">pages</div></div>
+        <div class="gs-item"><div class="gs-val">${s.domain_count.toLocaleString()}</div><div class="gs-label">domains</div></div>
+        <div class="gs-item"><div class="gs-val">${fmtBytes(s.total_bytes)}</div><div class="gs-label">stored</div></div>
+        <div class="gs-item"><div class="gs-val">${s.total_chars.toLocaleString()}</div><div class="gs-label">chars</div></div>
+      </div>
+      <div class="gs-time">Period: ${escapeHtml(timeRange)}</div>
+    `;
+  } catch (e) {
+    console.error("loadGlobalStats:", e);
+    el("globalStats").innerHTML = `<div class="empty">Failed to load</div>`;
+  }
+}
+
 async function loadDomainStats() {
   try {
     const stats = await invoke<DomainStat[]>("domain_stats");
@@ -146,7 +184,7 @@ async function loadDomainStats() {
       : stats.map(s => `
         <div class="stat">
           <div class="host">${escapeHtml(s.host)}</div>
-          <div class="nums">${s.cnt} pages · ${s.total_chars} chars · last ${escapeHtml(fmtTime(s.last_seen_ms))}</div>
+          <div class="nums">${s.cnt} pages · ${s.total_chars.toLocaleString()} chars · last ${escapeHtml(fmtTime(s.last_seen_ms))}</div>
         </div>
       `).join("");
   } catch (e) {
@@ -177,7 +215,7 @@ function switchView(view: ViewName) {
   }
 
   // Lazy-load data when switching views
-  if (view === "stats") loadDomainStats();
+  if (view === "stats") { loadGlobalStats(); loadDomainStats(); }
   if (view === "settings") loadSettings();
 }
 
@@ -201,7 +239,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   (el("q") as HTMLInputElement).addEventListener("input", debounceSearch);
   (el("hostFilter") as HTMLInputElement).addEventListener("input", debounceSearch);
-  el("refreshStats").addEventListener("click", () => loadDomainStats());
+  el("refreshStats").addEventListener("click", () => { loadGlobalStats(); loadDomainStats(); });
   el("searchBtn").addEventListener("click", () => runSearch());
 
   // Initial search

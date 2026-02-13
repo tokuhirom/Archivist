@@ -4,7 +4,7 @@ export function mountRoot() {
   root.innerHTML = `
     <nav class="nav">
       <a href="#" class="nav-item active" data-view="search">Search</a>
-      <a href="#" class="nav-item" data-view="stats">Domain Stats</a>
+      <a href="#" class="nav-item" data-view="stats">Stats</a>
       <a href="#" class="nav-item" data-view="settings">Settings</a>
     </nav>
 
@@ -26,9 +26,11 @@ export function mountRoot() {
     <div id="view-stats" class="view" style="display:none">
       <div class="view-content">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <h2 style="margin:0;">Domain Stats</h2>
+          <h2 style="margin:0;">Stats</h2>
           <button id="refreshStats">Refresh</button>
         </div>
+        <div id="globalStats"></div>
+        <h3 style="margin:20px 0 8px 0;">Domain Stats</h3>
         <div id="domainStats"></div>
       </div>
     </div>
