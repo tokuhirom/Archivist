@@ -2,28 +2,43 @@ export function mountRoot() {
   const root = document.getElementById("app");
   if (!root) return;
   root.innerHTML = `
-    <div class="header">
+    <nav class="nav">
+      <a href="#" class="nav-item active" data-view="search">Search</a>
+      <a href="#" class="nav-item" data-view="stats">Domain Stats</a>
+      <a href="#" class="nav-item" data-view="settings">Settings</a>
+    </nav>
+
+    <div class="search-bar" id="searchBar">
       <input id="q" placeholder="Search (FTS5)" />
       <input id="hostFilter" class="small" placeholder="host filter (optional)" />
       <button id="searchBtn">Search</button>
     </div>
 
-    <div class="main">
-      <div class="left">
-        <div id="results"></div>
-        <div class="panel">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-weight:700;">Domain stats</div>
-            <button id="refreshStats">Refresh</button>
-          </div>
-          <div id="domainStats"></div>
+    <div id="view-search" class="view">
+      <div class="main">
+        <div class="left">
+          <div id="results"></div>
         </div>
-        <div class="settings">
-          <label>Ingest token (copy into the Chrome extension options)</label>
-          <input id="token" readonly />
-        </div>
+        <div class="right" id="preview"></div>
       </div>
-      <div class="right" id="preview"></div>
+    </div>
+
+    <div id="view-stats" class="view" style="display:none">
+      <div class="view-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h2 style="margin:0;">Domain Stats</h2>
+          <button id="refreshStats">Refresh</button>
+        </div>
+        <div id="domainStats"></div>
+      </div>
+    </div>
+
+    <div id="view-settings" class="view" style="display:none">
+      <div class="view-content">
+        <h2 style="margin:0 0 12px 0;">Settings</h2>
+        <label>Ingest token (copy into the Chrome extension options)</label>
+        <input id="token" readonly style="width:100%;padding:8px;font-size:13px;margin-top:4px;" />
+      </div>
     </div>
   `;
 }

@@ -108,14 +108,47 @@ async function loadSettings() {
 }
 
 async function loadDomainStats() {
-  const stats = await invoke<DomainStat[]>("domain_stats");
-  const box = el("domainStats");
-  box.innerHTML = stats.map(s => `
-    <div class="stat">
-      <div class="host">${escapeHtml(s.host)}</div>
-      <div class="nums">${s.cnt} pages · ${s.total_chars} chars · last ${escapeHtml(fmtTime(s.last_seen_ms))}</div>
-    </div>
-  `).join("");
+  try {
+    const stats = await invoke<DomainStat[]>("domain_stats");
+    const box = el("domainStats");
+    box.innerHTML = stats.length === 0
+      ? `<div class="empty">No data</div>`
+      : stats.map(s => `
+        <div class="stat">
+          <div class="host">${escapeHtml(s.host)}</div>
+          <div class="nums">${s.cnt} pages · ${s.total_chars} chars · last ${escapeHtml(fmtTime(s.last_seen_ms))}</div>
+        </div>
+      `).join("");
+  } catch (e) {
+    console.error("loadDomainStats:", e);
+    el("domainStats").innerHTML = `<div class="empty">Failed to load</div>`;
+  }
+}
+
+type ViewName = "search" | "stats" | "settings";
+
+function switchView(view: ViewName) {
+  // Toggle view visibility
+  for (const v of ["search", "stats", "settings"] as const) {
+    el(`view-${v}`).style.display = v === view ? "" : "none";
+  }
+
+  // Show search bar only on search view
+  el("searchBar").style.display = view === "search" ? "" : "none";
+
+  // Update nav active state
+  for (const link of Array.from(document.querySelectorAll(".nav-item"))) {
+    const a = link as HTMLElement;
+    if (a.dataset.view === view) {
+      a.classList.add("active");
+    } else {
+      a.classList.remove("active");
+    }
+  }
+
+  // Lazy-load data when switching views
+  if (view === "stats") loadDomainStats();
+  if (view === "settings") loadSettings();
 }
 
 let searchTimer: number | null = null;
@@ -126,8 +159,15 @@ function debounceSearch() {
 
 window.addEventListener("DOMContentLoaded", async () => {
   mountRoot();
-  await loadSettings();
-  await loadDomainStats();
+
+  // Nav click handlers
+  for (const link of Array.from(document.querySelectorAll(".nav-item"))) {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const view = (link as HTMLElement).dataset.view as ViewName;
+      switchView(view);
+    });
+  }
 
   (el("q") as HTMLInputElement).addEventListener("input", debounceSearch);
   (el("hostFilter") as HTMLInputElement).addEventListener("input", debounceSearch);
@@ -137,5 +177,3 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Initial search
   await runSearch();
 });
-
-
