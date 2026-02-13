@@ -64,14 +64,33 @@ async function captureAndSend(tabId) {
   if (now - last < 10 * 60 * 1000) return; // 10 minutes
   sentCache.set(urlHash, now);
 
-  // Inject content script to extract DOM data.
+  // Inject Readability.js for article extraction.
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['Readability.js']
+  });
+
+  // Extract article content using Readability, with innerText fallback.
   const results = await chrome.scripting.executeScript({
     target: { tabId },
     func: () => {
       const canonical = document.querySelector('link[rel="canonical"]')?.href || null;
-      const title = document.title || "";
-      const text = document.body?.innerText || "";
-      return { canonical, title, text };
+      try {
+        const docClone = document.cloneNode(true);
+        const article = new Readability(docClone).parse();
+        if (article && article.textContent) {
+          return {
+            canonical,
+            title: article.title || document.title || "",
+            text: article.textContent,
+          };
+        }
+      } catch { /* fall through */ }
+      return {
+        canonical,
+        title: document.title || "",
+        text: document.body?.innerText || "",
+      };
     }
   });
 

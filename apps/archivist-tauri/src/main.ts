@@ -9,6 +9,7 @@ type SearchRow = {
   host: string;
   captured_at_ms: number;
   excerpt: string;
+  snippet: string;
 };
 
 type Page = SearchRow & {
@@ -60,6 +61,16 @@ async function select(id: number) {
   renderPreview(page);
 }
 
+function snippetHtml(r: SearchRow): string {
+  if (r.snippet) {
+    const escaped = escapeHtml(r.snippet);
+    return escaped
+      .replaceAll("[[mark]]", "<mark>")
+      .replaceAll("[[/mark]]", "</mark>");
+  }
+  return escapeHtml(r.excerpt || "");
+}
+
 function renderResults() {
   const list = el("results");
   list.innerHTML = results.map(r => {
@@ -68,7 +79,7 @@ function renderResults() {
       <div class="item ${isSel ? "sel" : ""}" data-id="${r.id}">
         <div class="title">${escapeHtml(r.title || "(no title)")}</div>
         <div class="meta">${escapeHtml(r.host)} · ${escapeHtml(fmtTime(r.captured_at_ms))}</div>
-        <div class="excerpt">${escapeHtml(r.excerpt || "")}</div>
+        <div class="excerpt">${snippetHtml(r)}</div>
       </div>
     `;
   }).join("");

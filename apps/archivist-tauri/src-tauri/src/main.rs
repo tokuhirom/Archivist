@@ -124,6 +124,7 @@ struct SearchRow {
   host: String,
   captured_at_ms: i64,
   excerpt: String,
+  snippet: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -176,6 +177,7 @@ async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_fil
         host: r.get(3)?,
         captured_at_ms: r.get(4)?,
         excerpt: r.get(5)?,
+        snippet: String::new(),
       })
     }).map_err(|e| e.to_string())?;
 
@@ -186,7 +188,8 @@ async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_fil
   }
 
   let mut sql = r#"
-    SELECT p.id, p.title, p.normalized_url, p.host, p.captured_at_ms, p.excerpt
+    SELECT p.id, p.title, p.normalized_url, p.host, p.captured_at_ms, p.excerpt,
+           snippet(pages_fts, 1, '[[mark]]', '[[/mark]]', '…', 30)
     FROM pages_fts f
     JOIN pages p ON p.id = f.rowid
     WHERE pages_fts MATCH ?1
@@ -209,6 +212,7 @@ async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_fil
       host: r.get(3)?,
       captured_at_ms: r.get(4)?,
       excerpt: r.get(5)?,
+      snippet: r.get(6)?,
     })
   };
 
