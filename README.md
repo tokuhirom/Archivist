@@ -1,5 +1,7 @@
 # Archivist
 
+![alt text](image.png)
+
 Archivist is a **local-first personal web archive**.
 
 It automatically captures the pages you read in Chrome (title + canonicalized URL + visible text) and stores them locally in SQLite (FTS5), so you can search everything later from a menu-bar app.
