@@ -41,7 +41,7 @@ export function mountRoot() {
         <label>Ingest URL</label>
         <input id="ingestUrl" readonly style="width:100%;padding:8px;font-size:13px;margin-top:4px;" />
         <div style="margin-top:12px;">
-          <label>Ingest token</label>
+          <label>Bearer Token</label>
           <input id="token" readonly style="width:100%;padding:8px;font-size:13px;margin-top:4px;" />
         </div>
         <div style="margin-top:12px;">
