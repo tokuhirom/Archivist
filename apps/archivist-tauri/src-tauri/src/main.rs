@@ -13,7 +13,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{net::SocketAddr, path::{Path, PathBuf}, sync::Arc};
 use tauri::Manager;
 use tauri::tray::MouseButton;
 use tauri_plugin_autostart::MacosLauncher;
@@ -400,7 +400,7 @@ fn app_data_dir(app: &tauri::AppHandle) -> PathBuf {
 
 const DEFAULT_PORT: u16 = 17373;
 
-fn load_port(dir: &PathBuf) -> u16 {
+fn load_port(dir: &Path) -> u16 {
   let path = dir.join("port.txt");
   if let Ok(s) = std::fs::read_to_string(&path) {
     if let Ok(p) = s.trim().parse::<u16>() {
@@ -410,12 +410,12 @@ fn load_port(dir: &PathBuf) -> u16 {
   DEFAULT_PORT
 }
 
-fn save_port(dir: &PathBuf, port: u16) {
+fn save_port(dir: &Path, port: u16) {
   std::fs::create_dir_all(dir).ok();
   let _ = std::fs::write(dir.join("port.txt"), port.to_string());
 }
 
-fn load_or_create_token(dir: &PathBuf) -> String {
+fn load_or_create_token(dir: &Path) -> String {
   std::fs::create_dir_all(dir).ok();
   let path = dir.join("token.txt");
   if let Ok(s) = std::fs::read_to_string(&path) {
@@ -431,7 +431,7 @@ fn load_or_create_token(dir: &PathBuf) -> String {
   t
 }
 
-fn open_db(dir: &PathBuf) -> rusqlite::Connection {
+fn open_db(dir: &Path) -> rusqlite::Connection {
   std::fs::create_dir_all(dir).ok();
   let p = dir.join("archivist.sqlite");
   let conn = rusqlite::Connection::open(p).expect("open sqlite");
@@ -492,7 +492,7 @@ fn main() {
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
     .setup(|app| {
-      let dir = app_data_dir(&app.handle());
+      let dir = app_data_dir(app.handle());
       let token = load_or_create_token(&dir);
       let conn = open_db(&dir);
 
@@ -500,7 +500,7 @@ fn main() {
       let port = load_port(&dir);
       let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
       let listener = std::net::TcpListener::bind(addr)
-        .expect(&format!("failed to bind ingest server on port {port}"));
+        .unwrap_or_else(|e| panic!("failed to bind ingest server on port {port}: {e}"));
       listener.set_nonblocking(true).ok();
       let ingest_url = format!("http://127.0.0.1:{}/capture", port);
 
