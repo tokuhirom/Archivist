@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="100%" stop-color="#7b2ff7"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="100%" stop-color="#c7d2fe"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#7b2ff7" flood-opacity="0.4"/>
+    </filter>
+    <filter id="innerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- Subtle grid pattern for "digital archive" feel -->
+  <g opacity="0.06" stroke="#00d2ff" stroke-width="1" fill="none">
+    <line x1="128" y1="0" x2="128" y2="512"/>
+    <line x1="256" y1="0" x2="256" y2="512"/>
+    <line x1="384" y1="0" x2="384" y2="512"/>
+    <line x1="0" y1="128" x2="512" y2="128"/>
+    <line x1="0" y1="256" x2="512" y2="256"/>
+    <line x1="0" y1="384" x2="512" y2="384"/>
+  </g>
+
+  <!-- Vault / archive box body -->
+  <g filter="url(#shadow)">
+    <!-- Main box -->
+    <rect x="112" y="160" width="288" height="230" rx="20" fill="url(#bg)" stroke="url(#glow)" stroke-width="3"/>
+
+    <!-- Lid -->
+    <path d="M100 175 Q100 140 135 140 L377 140 Q412 140 412 175 L412 185 Q412 195 400 195 L112 195 Q100 195 100 185 Z"
+          fill="url(#bg)" stroke="url(#glow)" stroke-width="3"/>
+  </g>
+
+  <!-- Stacked pages inside the box -->
+  <g opacity="0.9">
+    <!-- Page 3 (back) -->
+    <rect x="148" y="220" width="216" height="140" rx="6" fill="url(#page)" opacity="0.3" transform="rotate(-2 256 290)"/>
+    <!-- Page 2 (middle) -->
+    <rect x="148" y="220" width="216" height="140" rx="6" fill="url(#page)" opacity="0.5" transform="rotate(1 256 290)"/>
+    <!-- Page 1 (front) -->
+    <rect x="148" y="220" width="216" height="140" rx="6" fill="url(#page)" opacity="0.85"/>
+
+    <!-- Text lines on front page -->
+    <rect x="168" y="242" width="140" height="6" rx="3" fill="#6366f1" opacity="0.6"/>
+    <rect x="168" y="258" width="176" height="5" rx="2.5" fill="#94a3b8" opacity="0.5"/>
+    <rect x="168" y="271" width="160" height="5" rx="2.5" fill="#94a3b8" opacity="0.4"/>
+    <rect x="168" y="284" width="170" height="5" rx="2.5" fill="#94a3b8" opacity="0.35"/>
+    <rect x="168" y="297" width="120" height="5" rx="2.5" fill="#94a3b8" opacity="0.3"/>
+
+    <!-- Globe/web icon on the page -->
+    <circle cx="330" cy="318" r="22" fill="none" stroke="#6366f1" stroke-width="2" opacity="0.5"/>
+    <ellipse cx="330" cy="318" rx="10" ry="22" fill="none" stroke="#6366f1" stroke-width="1.5" opacity="0.4"/>
+    <line x1="308" y1="318" x2="352" y2="318" stroke="#6366f1" stroke-width="1.5" opacity="0.4"/>
+  </g>
+
+  <!-- Download / capture arrow -->
+  <g filter="url(#innerGlow)">
+    <path d="M256 80 L256 130" stroke="url(#glow)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M240 118 L256 136 L272 118" stroke="url(#glow)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- Corner accent dots -->
+  <circle cx="138" cy="405" r="4" fill="#00d2ff" opacity="0.6"/>
+  <circle cx="374" cy="405" r="4" fill="#7b2ff7" opacity="0.6"/>
+</svg>
