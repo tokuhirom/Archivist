@@ -36,16 +36,16 @@
       <label>Domain filter</label>
       <div class="radio-group">
         <label class="radio-label">
-          <input type="radio" name="filterMode" value="denylist" checked />
-          Denylist — skip these domains
+          <input type="radio" name="filterMode" value="allowlist" checked />
+          Allowlist — only capture these domains
         </label>
         <label class="radio-label">
-          <input type="radio" name="filterMode" value="allowlist" />
-          Allowlist — only capture these domains
+          <input type="radio" name="filterMode" value="denylist" />
+          Denylist — skip these domains
         </label>
       </div>
       <textarea id="domainList" rows="8" placeholder="mail.google.com&#10;accounts.google.com"></textarea>
-      <div id="domainListHint" class="hint">If the page hostname matches any line, Archivist Capture will skip sending.</div>
+      <div id="domainListHint" class="hint">Only pages whose hostname matches a line below will be captured.</div>
     </div>
 
     <div class="row">

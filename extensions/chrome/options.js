@@ -2,8 +2,8 @@ const DEFAULTS = {
   ingestUrl: "http://127.0.0.1:17373/capture",
   token: "",
   delayMs: 2000,
-  filterMode: "denylist",
-  domainList: ["mail.google.com", "accounts.google.com"]
+  filterMode: "allowlist",
+  domainList: []
 };
 
 async function migrateStorage() {
