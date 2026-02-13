@@ -291,6 +291,17 @@ window.addEventListener("DOMContentLoaded", async () => {
       console.error("set_autostart:", err);
     }
   });
+  el("toggleToken").addEventListener("click", () => {
+    const input = el("token") as HTMLInputElement;
+    const btn = el("toggleToken");
+    if (input.type === "password") {
+      input.type = "text";
+      btn.textContent = "Hide";
+    } else {
+      input.type = "password";
+      btn.textContent = "Show";
+    }
+  });
   el("savePort").addEventListener("click", async () => {
     const port = Number((el("portInput") as HTMLInputElement).value);
     const msg = el("portMsg");

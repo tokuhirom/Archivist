@@ -47,7 +47,10 @@ export function mountRoot() {
         <input id="ingestUrl" readonly style="width:100%;padding:8px;font-size:13px;margin-top:4px;" />
         <div style="margin-top:12px;">
           <label>Bearer Token</label>
-          <input id="token" readonly style="width:100%;padding:8px;font-size:13px;margin-top:4px;" />
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+            <input id="token" readonly type="password" style="flex:1;padding:8px;font-size:13px;" />
+            <button id="toggleToken" style="white-space:nowrap;">Show</button>
+          </div>
         </div>
         <div style="margin-top:12px;">
           <label>Port</label>
