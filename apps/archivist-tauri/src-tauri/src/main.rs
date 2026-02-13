@@ -80,8 +80,6 @@ async fn capture(State(state): State<AppState>, headers: HeaderMap, Json(p): Jso
 
   let conn = state.db.lock().await;
 
-  conn.execute_batch(include_str!("../sql/schema.sql")).ok();
-
   let r = conn.execute(
     r#"
     INSERT OR IGNORE INTO pages
@@ -156,8 +154,6 @@ async fn get_token(state: tauri::State<'_, AppState>) -> Result<String, String> 
 async fn search_pages(state: tauri::State<'_, AppState>, query: String, host_filter: Option<String>) -> Result<Vec<SearchRow>, String> {
   let q = query.trim();
   let conn = state.db.lock().await;
-
-  conn.execute_batch(include_str!("../sql/schema.sql")).map_err(|e| e.to_string())?;
 
   let mut out = Vec::new();
 
@@ -318,6 +314,7 @@ fn open_db(dir: &PathBuf) -> rusqlite::Connection {
   let p = dir.join("archivist.sqlite");
   let conn = rusqlite::Connection::open(p).expect("open sqlite");
   conn.execute_batch("PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL;").ok();
+  conn.execute_batch(include_str!("../sql/schema.sql")).expect("initialize schema");
   conn
 }
 
