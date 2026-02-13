@@ -36,7 +36,7 @@ extensions/chrome/          Chrome MV3 extension
 
 ## Requirements (macOS)
 
-- Node.js 18+ (Node 20+ recommended)
+- Node.js 22+
 - Rust toolchain (stable)
 - Tauri prerequisites for macOS (Xcode command line tools)
 
