@@ -153,6 +153,9 @@ async function loadSettings() {
   const ingestUrl = await invoke<string>("get_ingest_url");
   (el("ingestUrl") as HTMLInputElement).value = ingestUrl;
 
+  const port = await invoke<number>("get_port");
+  (el("portInput") as HTMLInputElement).value = String(port);
+
   try {
     const enabled = await invoke<boolean>("get_autostart");
     (el("autostart") as HTMLInputElement).checked = enabled;
@@ -281,6 +284,23 @@ window.addEventListener("DOMContentLoaded", async () => {
       await invoke("set_autostart", { enabled });
     } catch (err) {
       console.error("set_autostart:", err);
+    }
+  });
+  el("savePort").addEventListener("click", async () => {
+    const port = Number((el("portInput") as HTMLInputElement).value);
+    const msg = el("portMsg");
+    if (!port || port < 1 || port > 65535) {
+      msg.textContent = "Invalid port (1-65535)";
+      msg.style.color = "#c00";
+      return;
+    }
+    try {
+      await invoke("set_port", { port });
+      msg.textContent = "Saved (restart to apply)";
+      msg.style.color = "#080";
+    } catch (err) {
+      msg.textContent = String(err);
+      msg.style.color = "#c00";
     }
   });
 

@@ -44,6 +44,14 @@ export function mountRoot() {
           <label>Ingest token</label>
           <input id="token" readonly style="width:100%;padding:8px;font-size:13px;margin-top:4px;" />
         </div>
+        <div style="margin-top:12px;">
+          <label>Port</label>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+            <input id="portInput" type="number" min="1" max="65535" style="width:120px;padding:8px;font-size:13px;" />
+            <button id="savePort">Save</button>
+            <span id="portMsg" style="font-size:12px;color:#666;"></span>
+          </div>
+        </div>
         <div style="margin-top:16px;">
           <label><input type="checkbox" id="autostart" /> Launch at login</label>
         </div>
