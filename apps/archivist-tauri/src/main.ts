@@ -100,7 +100,7 @@ function renderResults() {
     const isSel = r.id === selectedId;
     return `
       <div class="item ${isSel ? "sel" : ""}" data-id="${r.id}">
-        <div class="title">${escapeHtml(r.title || "(no title)")}</div>
+        <div class="title"><img class="favicon" src="https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(r.host)}" alt="" />${escapeHtml(r.title || "(no title)")}</div>
         <div class="meta">${escapeHtml(r.host)} · ${escapeHtml(fmtTime(r.captured_at_ms))}</div>
         <div class="excerpt">${snippetHtml(r)}</div>
       </div>
@@ -112,6 +112,11 @@ function renderResults() {
       const id = Number((node as HTMLElement).dataset.id);
       select(id);
     });
+  }
+
+  const selEl = list.querySelector(".item.sel");
+  if (selEl) {
+    selEl.scrollIntoView({ block: "nearest" });
   }
 }
 
@@ -144,6 +149,13 @@ function renderPreview(page: Page | null) {
 async function loadSettings() {
   const token = await invoke<string>("get_token");
   (el("token") as HTMLInputElement).value = token;
+
+  try {
+    const enabled = await invoke<boolean>("get_autostart");
+    (el("autostart") as HTMLInputElement).checked = enabled;
+  } catch (e) {
+    console.error("get_autostart:", e);
+  }
 }
 
 function fmtBytes(bytes: number): string {
@@ -237,10 +249,37 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  function handleSearchKeydown(e: KeyboardEvent) {
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    if (results.length === 0) return;
+    e.preventDefault();
+
+    const idx = results.findIndex(r => r.id === selectedId);
+    let next: number;
+    if (e.key === "ArrowDown") {
+      next = idx < results.length - 1 ? idx + 1 : idx;
+    } else {
+      next = idx > 0 ? idx - 1 : 0;
+    }
+    if (results[next].id !== selectedId) {
+      select(results[next].id);
+    }
+  }
+
+  (el("q") as HTMLInputElement).addEventListener("keydown", handleSearchKeydown);
+  (el("hostFilter") as HTMLInputElement).addEventListener("keydown", handleSearchKeydown);
   (el("q") as HTMLInputElement).addEventListener("input", debounceSearch);
   (el("hostFilter") as HTMLInputElement).addEventListener("input", debounceSearch);
   el("refreshStats").addEventListener("click", () => { loadGlobalStats(); loadDomainStats(); });
   el("searchBtn").addEventListener("click", () => runSearch());
+  (el("autostart") as HTMLInputElement).addEventListener("change", async (e) => {
+    const enabled = (e.target as HTMLInputElement).checked;
+    try {
+      await invoke("set_autostart", { enabled });
+    } catch (err) {
+      console.error("set_autostart:", err);
+    }
+  });
 
   // Initial search
   await runSearch();
