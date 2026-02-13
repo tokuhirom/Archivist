@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## General Rules
+
+- Write all documentation, code comments, and CLAUDE.md content in English.
+- Always create a topic branch and open a PR for each change. Do not commit directly to main.
+- Do not mix unrelated changes in the same PR.
+
 ## Build & Development Commands
 
 ```bash
