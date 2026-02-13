@@ -99,7 +99,17 @@ This is intended to be “reasonable for personal use” rather than “high ass
 
 ---
 
-## Development notes
+## Architecture notes
+
+### Why rusqlite instead of tauri-plugin-sql?
+
+Tauri has an official `tauri-plugin-sql` for SQLite access, but Archivist uses `rusqlite` directly because:
+
+- The app runs an **Axum HTTP server** (`127.0.0.1:17373`) to receive page captures from the Chrome extension. This server needs Rust-side DB access, which `tauri-plugin-sql` does not expose.
+- Using a single `Arc<Mutex<Connection>>` shared between Tauri commands (reads) and Axum handlers (writes) keeps the architecture simple.
+- Using both `tauri-plugin-sql` and `rusqlite` would create two separate connections to the same SQLite file, adding complexity for no benefit.
+
+### Development notes
 
 - Capture is intentionally simple at first:
   - no SPA route tracking (yet)
