@@ -40,6 +40,9 @@ export function mountRoot() {
         <h2 style="margin:0 0 12px 0;">Settings</h2>
         <label>Ingest token (copy into the Chrome extension options)</label>
         <input id="token" readonly style="width:100%;padding:8px;font-size:13px;margin-top:4px;" />
+        <div style="margin-top:16px;">
+          <label><input type="checkbox" id="autostart" /> Launch at login</label>
+        </div>
       </div>
     </div>
   `;

@@ -15,6 +15,9 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{net::SocketAddr, path::PathBuf, sync::Arc};
 use tauri::Manager;
+use tauri::tray::MouseButton;
+use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::Mutex;
 
@@ -344,6 +347,21 @@ async fn open_in_browser(app: tauri::AppHandle, url: String) -> Result<(), Strin
   app.opener().open_url(&url, None::<&str>).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn get_autostart(app: tauri::AppHandle) -> Result<bool, String> {
+  app.autolaunch().is_enabled().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn set_autostart(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+  let mgr = app.autolaunch();
+  if enabled {
+    mgr.enable().map_err(|e| e.to_string())
+  } else {
+    mgr.disable().map_err(|e| e.to_string())
+  }
+}
+
 fn app_data_dir(app: &tauri::AppHandle) -> PathBuf {
   app.path()
     .app_data_dir()
@@ -425,6 +443,7 @@ fn migrate_fts_to_trigram(conn: &rusqlite::Connection) {
 fn main() {
   tauri::Builder::default()
     .plugin(tauri_plugin_opener::init())
+    .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
     .setup(|app| {
       let dir = app_data_dir(&app.handle());
       let token = load_or_create_token(&dir);
@@ -449,6 +468,53 @@ fn main() {
 
       app.manage(state);
 
+      // Build system tray
+      let show = tauri::menu::MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+      let quit = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+      let menu = tauri::menu::Menu::with_items(app, &[&show, &quit])?;
+
+      tauri::tray::TrayIconBuilder::new()
+        .icon(app.default_window_icon().unwrap().clone())
+        .menu(&menu)
+        .on_menu_event(|app: &tauri::AppHandle, event: tauri::menu::MenuEvent| {
+          match event.id().as_ref() {
+            "show" => {
+              if let Some(w) = app.get_webview_window("main") {
+                let _ = w.show();
+                let _ = w.set_focus();
+              }
+            }
+            "quit" => {
+              app.exit(0);
+            }
+            _ => {}
+          }
+        })
+        .on_tray_icon_event(|tray: &tauri::tray::TrayIcon, event: tauri::tray::TrayIconEvent| {
+          if let tauri::tray::TrayIconEvent::Click { button: MouseButton::Left, .. } = event {
+            if let Some(w) = tray.app_handle().get_webview_window("main") {
+              if w.is_visible().unwrap_or(false) {
+                let _ = w.hide();
+              } else {
+                let _ = w.show();
+                let _ = w.set_focus();
+              }
+            }
+          }
+        })
+        .build(app)?;
+
+      // Intercept window close -> hide instead
+      if let Some(window) = app.get_webview_window("main") {
+        let w = window.clone();
+        window.on_window_event(move |event| {
+          if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            api.prevent_close();
+            let _ = w.hide();
+          }
+        });
+      }
+
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
@@ -457,7 +523,9 @@ fn main() {
       get_page,
       domain_stats,
       global_stats,
-      open_in_browser
+      open_in_browser,
+      get_autostart,
+      set_autostart
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
