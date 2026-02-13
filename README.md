@@ -34,11 +34,19 @@ extensions/chrome/          Chrome MV3 extension
 
 ---
 
-## Requirements (macOS)
+## Requirements
+
+### macOS
 
 - Node.js 22+
 - Rust toolchain (stable)
 - Tauri prerequisites for macOS (Xcode command line tools)
+
+### Windows
+
+- Node.js 22+
+- Rust toolchain (stable)
+- MSYS2 / MinGW-w64 environment (for `x86_64-pc-windows-gnu` target)
 
 ---
 
