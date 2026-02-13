@@ -5,7 +5,8 @@ const DEFAULTS = {
   ingestUrl: "http://127.0.0.1:17373/capture",
   token: "",
   delayMs: 2000,
-  denylist: ["mail.google.com", "accounts.google.com"]
+  filterMode: "denylist",
+  domainList: ["mail.google.com", "accounts.google.com"]
 };
 
 const sentCache = new Map(); // urlHash -> lastSentAtMs
@@ -59,10 +60,25 @@ function normalizeUrl(raw) {
   return u.toString();
 }
 
-async function shouldSkipByDenylist(url) {
-  const { denylist } = await chrome.storage.sync.get(DEFAULTS);
+async function migrateStorage() {
+  const data = await chrome.storage.sync.get(null);
+  if (data.denylist && !data.domainList) {
+    await chrome.storage.sync.set({
+      domainList: data.denylist,
+      filterMode: "denylist"
+    });
+    await chrome.storage.sync.remove("denylist");
+  }
+}
+
+async function shouldSkipByFilter(url) {
+  const { filterMode, domainList } = await chrome.storage.sync.get(DEFAULTS);
   const host = new URL(url).hostname;
-  return (denylist || []).some(x => x === host);
+  const inList = (domainList || []).some(x => x === host);
+  if (filterMode === "allowlist") {
+    return !inList;
+  }
+  return inList;
 }
 
 async function captureAndSend(tabId) {
@@ -73,7 +89,7 @@ async function captureAndSend(tabId) {
   if (!tab || !tab.url) return;
 
   if (tab.url.startsWith("chrome://") || tab.url.startsWith("chrome-extension://")) return;
-  if (await shouldSkipByDenylist(tab.url)) return;
+  if (await shouldSkipByFilter(tab.url)) return;
 
   const normalized = normalizeUrl(tab.url);
   const urlHash = await sha1Hex(normalized);
@@ -148,6 +164,8 @@ async function captureAndSend(tabId) {
     setIconError();
   }
 }
+
+migrateStorage();
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status !== "complete") return;

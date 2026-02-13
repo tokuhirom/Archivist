@@ -12,6 +12,9 @@
       .hint { color: #555; font-size: 13px; }
       .ok { color: #0a7; }
       .err { color: #c00; }
+      fieldset { margin-top: 16px; border: 1px solid #ccc; border-radius: 4px; padding: 8px 12px; }
+      legend { font-weight: 600; font-size: 14px; }
+      .radio-label { display: block; font-weight: normal; margin-top: 4px; cursor: pointer; }
     </style>
   </head>
   <body>
@@ -26,9 +29,21 @@
     <label>Capture delay (ms)</label>
     <input id="delayMs" type="number" min="0" step="100" />
 
-    <label>Denylist (one host per line)</label>
-    <textarea id="denylist" rows="8" placeholder="mail.google.com&#10;accounts.google.com"></textarea>
-    <div class="hint">If the page hostname matches any line, Archivist Capture will skip sending.</div>
+    <fieldset id="filterModeFieldset">
+      <legend>Filter mode</legend>
+      <label class="radio-label">
+        <input type="radio" name="filterMode" value="denylist" checked />
+        Denylist — skip these domains
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="filterMode" value="allowlist" />
+        Allowlist — only capture these domains
+      </label>
+    </fieldset>
+
+    <label id="domainListLabel">Denylist (one host per line)</label>
+    <textarea id="domainList" rows="8" placeholder="mail.google.com&#10;accounts.google.com"></textarea>
+    <div id="domainListHint" class="hint">If the page hostname matches any line, Archivist Capture will skip sending.</div>
 
     <div class="row">
       <button id="save">Save</button>
