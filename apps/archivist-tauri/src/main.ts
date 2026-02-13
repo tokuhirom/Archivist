@@ -112,6 +112,7 @@ function renderResults() {
     node.addEventListener("click", () => {
       const id = Number((node as HTMLElement).dataset.id);
       select(id);
+      list.focus();
     });
   }
 
@@ -276,6 +277,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   (el("q") as HTMLInputElement).addEventListener("keydown", handleSearchKeydown);
   (el("hostFilter") as HTMLInputElement).addEventListener("keydown", handleSearchKeydown);
   el("preview").addEventListener("keydown", handleSearchKeydown);
+  el("results").addEventListener("keydown", handleSearchKeydown);
   (el("q") as HTMLInputElement).addEventListener("input", debounceSearch);
   (el("hostFilter") as HTMLInputElement).addEventListener("input", debounceSearch);
   (el("sortOrder") as HTMLSelectElement).addEventListener("change", () => runSearch());

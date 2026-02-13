@@ -22,7 +22,7 @@ export function mountRoot() {
     <div id="view-search" class="view">
       <div class="main">
         <div class="left">
-          <div id="results"></div>
+          <div id="results" tabindex="0"></div>
         </div>
         <div class="right" id="preview" tabindex="0"></div>
       </div>

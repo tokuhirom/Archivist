@@ -9,6 +9,7 @@ body { margin: 0; }
 .search-bar .small { width: 240px; flex: none; }
 .main { display: grid; grid-template-columns: 420px 1fr; height: calc(100vh - 96px); }
 .left { border-right: 1px solid #ddd; overflow: auto; }
+#results { outline: none; }
 .right { overflow: auto; padding: 12px 16px; outline: none; }
 .item { padding: 10px 12px; border-bottom: 1px solid #eee; cursor: pointer; }
 .item:hover { background: #f7f7f7; }
