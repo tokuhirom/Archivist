@@ -1,5 +1,7 @@
 APP_DIR := apps/archivist-tauri
 TAURI_DIR := $(APP_DIR)/src-tauri
+ICON_ICO := $(TAURI_DIR)/icons/icon.ico
+ICON_PNG := $(TAURI_DIR)/icons/icon.png
 
 .PHONY: setup dev build clean install lint
 
@@ -7,12 +9,16 @@ TAURI_DIR := $(APP_DIR)/src-tauri
 setup:
 	cd $(APP_DIR) && npm install
 
+## icons: Generate icon.ico from icon.png
+$(ICON_ICO): $(ICON_PNG)
+	cd $(APP_DIR) && npx tauri icon src-tauri/icons/icon.png
+
 ## dev: Start the app in development mode
-dev:
+dev: $(ICON_ICO)
 	cd $(APP_DIR) && npm run tauri dev
 
 ## build: Build the production app bundle
-build:
+build: $(ICON_ICO)
 	cd $(APP_DIR) && npm run tauri build
 
 ## clean: Remove build artifacts
